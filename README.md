@@ -17,6 +17,7 @@ Most transformer models have fixed context windows (e.g., 1024 tokens for GPT-2)
 ### Architecture Overview
 
 ```mermaid
+%%{init: {'theme': 'dark'}}%%
 graph TD
     Input[Long Input Text] --> CW[ContextWormhole]
     CW --> SW[Sliding Window]
@@ -41,9 +42,11 @@ graph TD
     AS2 --> AS3[Keep recent context]
     AS3 --> ASOut[Output]
     
-    style SW fill:#f9f,stroke:#333,stroke-width:2px
-    style HC fill:#bbf,stroke:#333,stroke-width:2px
-    style AS fill:#bfb,stroke:#333,stroke-width:2px
+    style SW fill:#d580ff,stroke:#eee,stroke-width:2px
+    style HC fill:#80b3ff,stroke:#eee,stroke-width:2px
+    style AS fill:#80ff9e,stroke:#eee,stroke-width:2px
+    
+    classDef default fill:#333,stroke:#eee,color:#fff,stroke-width:1px
 ```
 
 ### 1. Sliding Window
@@ -243,6 +246,7 @@ These examples demonstrate how ContextWormhole automatically handles context len
 ## Performance Characteristics
 
 ```mermaid
+%%{init: {'theme': 'dark'}}%%
 graph LR
     subgraph "Max Context Length"
         SW_C[Sliding Window] --- SW_CL[~10K tokens]
@@ -268,18 +272,20 @@ graph LR
         AS_U[Attention Sink] --- AS_UC[Conversations]
     end
     
-    style SW_C fill:#f9f,stroke:#333,stroke-width:1px
-    style HC_C fill:#bbf,stroke:#333,stroke-width:1px
-    style AS_C fill:#bfb,stroke:#333,stroke-width:1px
-    style SW_M fill:#f9f,stroke:#333,stroke-width:1px
-    style HC_M fill:#bbf,stroke:#333,stroke-width:1px
-    style AS_M fill:#bfb,stroke:#333,stroke-width:1px
-    style SW_T fill:#f9f,stroke:#333,stroke-width:1px
-    style HC_T fill:#bbf,stroke:#333,stroke-width:1px
-    style AS_T fill:#bfb,stroke:#333,stroke-width:1px
-    style SW_U fill:#f9f,stroke:#333,stroke-width:1px
-    style HC_U fill:#bbf,stroke:#333,stroke-width:1px
-    style AS_U fill:#bfb,stroke:#333,stroke-width:1px
+    style SW_C fill:#d580ff,stroke:#eee,stroke-width:1px
+    style HC_C fill:#80b3ff,stroke:#eee,stroke-width:1px
+    style AS_C fill:#80ff9e,stroke:#eee,stroke-width:1px
+    style SW_M fill:#d580ff,stroke:#eee,stroke-width:1px
+    style HC_M fill:#80b3ff,stroke:#eee,stroke-width:1px
+    style AS_M fill:#80ff9e,stroke:#eee,stroke-width:1px
+    style SW_T fill:#d580ff,stroke:#eee,stroke-width:1px
+    style HC_T fill:#80b3ff,stroke:#eee,stroke-width:1px
+    style AS_T fill:#80ff9e,stroke:#eee,stroke-width:1px
+    style SW_U fill:#d580ff,stroke:#eee,stroke-width:1px
+    style HC_U fill:#80b3ff,stroke:#eee,stroke-width:1px
+    style AS_U fill:#80ff9e,stroke:#eee,stroke-width:1px
+    
+    classDef default fill:#333,stroke:#eee,color:#fff,stroke-width:1px
 ```
 
 | Strategy | Max Context | Memory (MB)* | Time (s)* | Best For |
