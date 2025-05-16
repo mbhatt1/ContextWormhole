@@ -337,6 +337,70 @@ The implementation uses modulo arithmetic to "recycle" position IDs, combined wi
 
 This library implements well-established context extension techniques:
 
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    subgraph SW["Sliding Window Technique"]
+        direction TB
+        SW1[Long Input Text] --> SW2[Split into overlapping chunks]
+        SW2 --> SW3[Process first chunk]
+        SW3 --> SW4[Process next chunk with overlap]
+        SW4 --> SW5{More chunks?}
+        SW5 -->|Yes| SW4
+        SW5 -->|No| SW6[Combine processed chunks]
+        SW6 --> SW7[Final output]
+        
+        style SW fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style SW1 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style SW2 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style SW3 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style SW4 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style SW5 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style SW6 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style SW7 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+    end
+    
+    subgraph HC["Hierarchical Context Technique"]
+        direction TB
+        HC1[Long Input Text] --> HC2[Split into chunks]
+        HC2 --> HC3[Generate summary for each chunk]
+        HC3 --> HC4[Combine summaries]
+        HC4 --> HC5[Process final chunk with summaries]
+        HC5 --> HC6[Final output]
+        
+        style HC fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style HC1 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style HC2 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style HC3 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style HC4 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style HC5 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style HC6 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+    end
+    
+    subgraph AS["Attention Sink Technique"]
+        direction TB
+        AS1[Long Input Text] --> AS2[Keep initial tokens]
+        AS2 --> AS3[Discard middle content]
+        AS3 --> AS4[Keep recent context]
+        AS4 --> AS5[Process with attention sink]
+        AS5 --> AS6[Final output]
+        
+        style AS fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style AS1 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style AS2 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style AS3 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style AS4 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style AS5 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+        style AS6 fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+    end
+    
+    style SW stroke:#9370DB,stroke-width:2px
+    style HC stroke:#6495ED,stroke-width:2px
+    style AS stroke:#66CDAA,stroke-width:2px
+    
+    classDef default fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
+```
+
 - **Sliding Window**: Classical attention windowing
 - **Hierarchical Context**: Recursive summarization approach
 - **Attention Sink**: Based on StreamingLLM research
