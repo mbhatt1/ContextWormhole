@@ -17,58 +17,8 @@ Most transformer models have fixed context windows (e.g., 1024 tokens for GPT-2)
 
 ## Strategies
 
-### Architecture Overview
+### Overview
 
-```mermaid
-%%{init: {'theme': 'dark'}}%%
-graph TD
-    Input[Long Input Text] --> CW[ContextWormhole]
-    CW --> SW[Sliding Window]
-    CW --> HC[Hierarchical Context]
-    CW --> AS[Attention Sink]
-    
-    %% Sliding Window Strategy
-    SW --> SW1[Split into overlapping chunks]
-    SW1 --> |"e.g., chunk1: [0-512]<br>chunk2: [448-960]<br>(64 token overlap)"| SW2[Apply position ID recycling]
-    SW2 --> SW3[Process each chunk with model]
-    SW3 --> |"Forward pass through<br>transformer model"| SW4[Cache KV for each chunk]
-    SW4 --> SW5[Combine results with overlap handling]
-    SW5 --> |"Resolve token<br>continuity at<br>chunk boundaries"| SWOut[Final coherent output]
-    
-    %% Hierarchical Context Strategy
-    HC --> HC1[Split into fixed-size chunks]
-    HC1 --> |"e.g., chunk size: 256"| HC2[Generate summary for each chunk]
-    HC2 --> |"Compress each chunk<br>into shorter summary"| HC3[Combine all summaries]
-    HC3 --> |"Create context<br>representation"| HC4[Append summaries to final chunk]
-    HC4 --> |"[summaries] + [final chunk]"| HC5[Process combined text]
-    HC5 --> HCOut[Final output with global context]
-    
-    %% Attention Sink Strategy
-    AS --> AS1[Identify initial sink tokens]
-    AS1 --> |"First N tokens<br>(e.g., 16 tokens)"| AS2[Discard middle content]
-    AS2 --> |"Remove tokens that<br>exceed context limit<br>minus (sink+recent)"| AS3[Keep most recent context]
-    AS3 --> |"Last M tokens<br>before generation point"| AS4[Combine sink + recent tokens]
-    AS4 --> |"[sink tokens] + [recent tokens]"| AS5[Process with attention mechanism]
-    AS5 --> ASOut[Output with preserved context]
-    
-    %% Example input/output
-    subgraph Example["Example: 4096-token document with 1024 context limit"]
-        direction TB
-        Ex1["Sliding Window: Process in 4 chunks with 256 token overlap"]
-        Ex2["Hierarchical: Create 16 summaries (64 tokens each) + final chunk"]
-        Ex3["Attention Sink: Keep 16 initial tokens + 1008 most recent tokens"]
-    end
-    
-    style SW fill:#9370DB,stroke:#aaa,stroke-width:2px
-    style HC fill:#6495ED,stroke:#aaa,stroke-width:2px
-    style AS fill:#66CDAA,stroke:#aaa,stroke-width:2px
-    style Example fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
-    style Ex1 fill:#2A2A2A,stroke:#9370DB,color:#ddd,stroke-width:1px
-    style Ex2 fill:#2A2A2A,stroke:#6495ED,color:#ddd,stroke-width:1px
-    style Ex3 fill:#2A2A2A,stroke:#66CDAA,color:#ddd,stroke-width:1px
-    
-    classDef default fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
-```
 
 ### 1. Sliding Window
 
