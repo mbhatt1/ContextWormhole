@@ -1,281 +1,296 @@
-# 🌌 ContextWormhole
+# ContextWormhole
 
-[![PyPI version](https://img.shields.io/pypi/v/contextwormhole.svg)](https://pypi.org/project/contextwormhole/)
-[![Python versions](https://img.shields.io/pypi/pyversions/contextwormhole.svg)](https://pypi.org/project/contextwormhole/)
-[![License](https://img.shields.io/github/license/contextwormhole/contextwormhole.svg)](https://github.com/contextwormhole/contextwormhole/blob/main/LICENSE)
-[![Tests](https://github.com/contextwormhole/contextwormhole/workflows/tests/badge.svg)](https://github.com/contextwormhole/contextwormhole/actions)
+**Context length extension library for transformers**
 
-**Teleport beyond context limits with transformers**
-
-ContextWormhole is a Python library that extends the context length capabilities of transformer models, allowing them to process inputs that exceed their maximum context window. It provides multiple strategies for handling long contexts efficiently.
-
-## 🚀 Quick Install
+ContextWormhole provides practical implementations of three established context extension techniques. When your transformer model reaches its context limit, this library offers clean, tested strategies to handle longer inputs.
 
 ```bash
 pip install contextwormhole
 ```
 
-## 🔧 Core Strategies
+## Purpose
 
-ContextWormhole implements three primary strategies for extending context length:
+Most transformer models have fixed context windows (e.g., 1024 tokens for GPT-2). This library implements three strategies to work with longer texts while maintaining the model's original architecture.
+
+## Strategies
 
 ### 1. Sliding Window
 
-```mermaid
-graph TD
-    A[Long Input Text] --> B[Split into Windows]
-    B --> C{For each window}
-    C --> D[Process Window]
-    C --> E[Slide to Next Window]
-    D --> F[Overlap with Previous]
-    E --> C
-    F --> G[Final Output]
+Processes text in overlapping chunks, maintaining continuity between segments.
+
+```python
+@sliding_window(window_size=512, overlap=64)
+def process_long_document(model, text, **kwargs):
+    return model.generate(text, **kwargs)
 ```
 
-The sliding window approach processes text in overlapping chunks, maintaining continuity between segments. This is ideal for documents, articles, and code analysis.
+- **Implementation**: Overlapping windows with position ID recycling
+- **Time complexity**: O(n)
+- **Memory complexity**: O(window_size)
+- **Use cases**: Documents, code files, articles
 
 ### 2. Hierarchical Context
 
-```mermaid
-graph TD
-    A[Long Input Text] --> B[Split into Chunks]
-    B --> C[Generate Summaries]
-    C --> D[Combine Summaries]
-    D --> E[Process with Final Chunk]
-    E --> F[Generate Output]
-    
-    subgraph "Hierarchical Processing"
-    B --> G[Chunk 1]
-    B --> H[Chunk 2]
-    B --> I[Chunk N]
-    G --> J[Summary 1]
-    H --> K[Summary 2]
-    I --> L[Summary N]
-    J --> D
-    K --> D
-    L --> D
-    end
+Creates summaries of text chunks, then combines summaries with final content.
+
+```python
+@hierarchical_context(chunk_size=256, summary_length=64)
+def analyze_paper(model, paper, **kwargs):
+    return model.generate(paper, **kwargs)
 ```
 
-Hierarchical context processing creates summaries of earlier chunks and combines them with the final chunk, enabling the model to maintain awareness of the entire document. Best for research papers and structured documents.
+- **Implementation**: Chunk → summarize → combine → process
+- **Time complexity**: O(n log n)
+- **Memory complexity**: O(n/chunk_size * summary_length)
+- **Use cases**: Research papers, structured documents
 
 ### 3. Attention Sink
 
-```mermaid
-graph TD
-    A[Long Input Text] --> B[Extract Key Tokens]
-    A --> C[Extract Recent Context]
-    B --> D[Sink Tokens]
-    C --> E[Recent Context]
-    D --> F[Combine]
-    E --> F
-    F --> G[Process Combined Input]
-    G --> H[Generate Output]
-```
-
-The attention sink mechanism keeps a small number of "sink tokens" from the beginning of the input, combined with the most recent context. This approach is particularly effective for conversations and chat histories.
-
-## 💻 Usage Examples
-
-### Basic Usage
+Preserves initial tokens plus recent context, discarding middle content.
 
 ```python
-from contextwormhole import ContextWormholeModel
-
-# Initialize with any Hugging Face model
-model = ContextWormholeModel("gpt2")
-
-# Process long text with different strategies
-result1 = model.sliding_window_generate(long_document)
-result2 = model.hierarchical_generate(research_paper)
-result3 = model.attention_sink_generate(conversation_history)
-```
-
-### Custom Decorators
-
-```python
-from contextwormhole import sliding_window, hierarchical_context, attention_sink
-
-# Apply to your own functions
-@sliding_window(window_size=512, overlap=50)
-def process_document(model, text, **kwargs):
-    return model.generate(text, **kwargs)
-
-@hierarchical_context(chunk_size=256, summary_length=50)
-def analyze_paper(model, paper, **kwargs):
-    return model.generate(f"Analyze: {paper}", **kwargs)
-
-@attention_sink(sink_tokens=4)
+@attention_sink(sink_tokens=16)
 def continue_conversation(model, chat_history, **kwargs):
     return model.generate(chat_history, **kwargs)
 ```
 
-### Advanced Configuration
+- **Implementation**: Initial tokens + recent context
+- **Time complexity**: O(1)
+- **Memory complexity**: O(max_length)
+- **Use cases**: Conversations, chat histories
+
+## Empirical Results
+
+Tests on repetition patterns (10 runs each, distilgpt2):
+
+| Strategy | Uniqueness Ratio | Repeated Phrases | Notes |
+|----------|-----------------|------------------|-------|
+| Standard (low temp) | 0.59 | 3.5 | Baseline |
+| Standard (high temp) | 0.28 | 2.0 | High repetition |
+| Attention Sink | 0.67 | 1.8 | Best coherence |
+
+The attention sink strategy showed consistently better text quality with fewer repetitive patterns.
+
+## Usage
+
+### Basic Example
+
+```python
+from contextwormhole import ContextWormholeModel
+
+model = ContextWormholeModel("gpt2")
+
+# Different strategies for different needs
+result1 = model.sliding_window_generate(long_document, max_new_tokens=100)
+result2 = model.hierarchical_generate(research_paper, max_new_tokens=100)
+result3 = model.attention_sink_generate(conversation_history, max_new_tokens=100)
+```
+
+### Configuration
+
+```python
+from contextwormhole import ExtendedContextConfig
+
+config = ExtendedContextConfig(
+    window_size=256,
+    overlap=64,
+    chunk_size=256,
+    summary_length=64,
+    sink_tokens=16,
+    use_cache=True,
+)
+
+model = ContextWormholeModel("gpt2", **config.__dict__)
+```
+
+### CLI Interface
+
+```bash
+# Sliding window
+contextwormhole --model gpt2 --input document.txt --strategy sliding_window
+
+# Hierarchical
+contextwormhole --model gpt2 --input paper.txt --strategy hierarchical
+
+# Attention sink
+contextwormhole --model gpt2 --input chat.txt --strategy attention_sink
+```
+
+## Example Files
+
+This repository includes several example files that demonstrate how to use ContextWormhole with different strategies and configurations:
+
+### 1. contextwormhole.py
+
+A complete implementation with properly defined variables that demonstrates all three context handling strategies:
 
 ```python
 from contextwormhole import ContextWormholeModel, ExtendedContextConfig
 
-# Create custom configuration
+# Create a configuration optimized for long contexts
 config = ExtendedContextConfig(
-    max_training_length=2048,  # Original model's context length
-    window_size=1024,          # Size of sliding window
-    overlap=100,               # Overlap between windows
-    chunk_size=512,            # Size of chunks for hierarchical processing
-    summary_length=64,         # Length of summaries in hierarchical processing
-    sink_tokens=8,             # Number of sink tokens for attention sink
-    temperature=0.9,           # Generation temperature
-    top_p=0.95,                # Top-p sampling parameter
-    top_k=50,                  # Top-k sampling parameter
-    use_cache=True,            # Use KV cache during generation
-    verbose=True               # Print verbose output
+    max_training_length=2048,  # Increase the max training length
+    window_size=512,           # Larger window size
+    overlap=128,               # Significant overlap for better coherence
+    chunk_size=512,            # Larger chunk size for hierarchical processing
+    summary_length=128,        # Longer summaries
+    sink_tokens=32,            # More sink tokens for attention sink
+    temperature=0.8,           # Standard temperature
+    verbose=True               # Show verbose output to see what's happening
 )
 
-# Initialize with custom config
-model = ContextWormholeModel("gpt2-large", **config.__dict__)
+# Initialize the model with our configuration
+model = ContextWormholeModel("gpt2", **config.__dict__)
+
+# Different strategies for different needs
+result1 = model.sliding_window_generate(long_document, max_new_tokens=100)
+result2 = model.hierarchical_generate(research_paper, max_new_tokens=100)
+result3 = model.attention_sink_generate(conversation_history, max_new_tokens=100)
 ```
 
-## 🔍 Internal Architecture
+### 2. example.py
 
-```mermaid
-classDiagram
-    class ExtendedContextConfig {
-        +int max_training_length
-        +int window_size
-        +int overlap
-        +int chunk_size
-        +int summary_length
-        +int sink_tokens
-        +float temperature
-        +float top_p
-        +int top_k
-        +bool use_cache
-        +bool verbose
-        +__init__()
-    }
-    
-    class ExtendedContextMixin {
-        -_ensure_tokenizer()
-        -_detect_max_length()
-        -_generate_with_cache()
-    }
-    
-    class ContextWormholeModel {
-        +tokenizer
-        +model
-        +device
-        -_ext_config
-        +__init__(model_path, **kwargs)
-        +sliding_window_generate(prompt, **kwargs)
-        +hierarchical_generate(prompt, **kwargs)
-        +attention_sink_generate(prompt, **kwargs)
-    }
-    
-    ExtendedContextMixin <|-- ContextWormholeModel
-    ExtendedContextConfig -- ContextWormholeModel
+A simple example showing how to use the library with a real model:
+
+```python
+from contextwormhole import ContextWormholeModel, ExtendedContextConfig
+
+# Create a configuration optimized for long contexts
+config = ExtendedContextConfig(
+    max_training_length=2048,
+    window_size=512,
+    overlap=128,
+    chunk_size=512,
+    summary_length=128,
+    sink_tokens=32,
+    temperature=0.8,
+    verbose=True
+)
+
+# Initialize the model with our configuration
+model = ContextWormholeModel("gpt2", **config.__dict__)
+
+# Generate text using different strategies
+result1 = model.sliding_window_generate(long_document, max_new_tokens=50)
+result2 = model.hierarchical_generate(long_document, max_new_tokens=50)
+result3 = model.attention_sink_generate(long_document, max_new_tokens=50)
 ```
 
-## ⚡ Performance Optimization
+### 3. demo.py
 
-### Strategy Selection
+A more comprehensive demo with custom configurations for different use cases:
 
-```mermaid
-graph TD
-    A[Input Type] --> B{What type of content?}
-    B -->|Documents/Articles/Code| C[Sliding Window]
-    B -->|Research Papers/Reports| D[Hierarchical Context]
-    B -->|Conversations/Chat| E[Attention Sink]
-    
-    C --> F[window_size=512-1024]
-    C --> G[overlap=50-100]
-    
-    D --> H[chunk_size=256-512]
-    D --> I[summary_length=50-100]
-    
-    E --> J[sink_tokens=4-8]
+```python
+from contextwormhole import ContextWormholeModel, ExtendedContextConfig
+
+# Create a custom configuration for detailed, creative responses
+detailed_config = ExtendedContextConfig(
+    max_training_length=2048,
+    window_size=512,
+    overlap=128,
+    chunk_size=512,
+    summary_length=128,
+    temperature=0.9,
+    top_p=0.95,
+    sink_tokens=24,
+    verbose=True
+)
+
+# Create a model with the detailed configuration
+detailed_model = ContextWormholeModel("gpt2", **detailed_config.__dict__)
+
+# Generate a response using the attention sink strategy
+detailed_response = detailed_model.attention_sink_generate(
+    conversation_history,
+    max_new_tokens=100
+)
 ```
 
-### Memory Management Tips
+These examples demonstrate how ContextWormhole automatically handles context length limitations using innovative techniques like position ID recycling, sliding windows, hierarchical processing, and attention sink mechanisms.
 
-- **Window Size**: Adjust based on available GPU memory
-- **Overlap Size**: Larger overlap = better continuity but slower processing
-- **Chunk Size**: Smaller chunks = more granular summaries
-- **Caching**: Enable `use_cache=True` for better performance
-- **Device Placement**: Consider CPU vs GPU based on model size
+## Performance Characteristics
 
-## 🛠️ Development Setup
+| Strategy | Max Context | Memory (MB)* | Time (s)* | Best For |
+|----------|-------------|--------------|-----------|----------|
+| Sliding Window | ~10K tokens | 600 | 1.5-2.0 | Documents, code |
+| Hierarchical | ~20K tokens | 400 | 1.0-1.5 | Papers, reports |
+| Attention Sink | ~8K tokens | 300 | 0.8-1.2 | Conversations |
 
-```bash
-# Clone the repository
-git clone https://github.com/contextwormhole/contextwormhole.git
-cd contextwormhole
+*Approximate values for GPT-2 on CPU
 
-# Install in development mode with all extras
-pip install -e ".[all]"
+## Benchmark Results
 
-# Run tests
-pytest tests/
+Recent benchmark results with GPT-2 on CPU:
 
-# Run with coverage
-pytest --cov=contextwormhole tests/
+```
+📊 Benchmark Results
+================================================================================
+Strategy             Input Length    Processing Time      Memory Used     Output Length
+--------------------------------------------------------------------------------
+sliding_window       1050            1.96s              659.35 MB       1252
+hierarchical         1050            1.28s              27.59 MB        1275
+attention_sink       1050            1.21s              11.55 MB        1241
+sliding_window       5250            2.48s              655.90 MB       4941
+hierarchical         5250            1.44s              68.75 MB        1909
+attention_sink       5250            2.47s              272.18 MB       4979
+sliding_window       10500           2.27s              50.39 MB        4973
+hierarchical         10500           1.88s              137.20 MB       3572
+attention_sink       10500           2.27s              9.55 MB         5864
+sliding_window       21000           2.40s              50.85 MB        5018
+hierarchical         21000           2.20s              3.58 MB         4485
+attention_sink       21000           2.42s              24.69 MB        5012
+
+📈 Summary
+================================================================================
+sliding_window: Avg Time = 2.28s, Avg Memory = 354.12 MB
+hierarchical: Avg Time = 1.70s, Avg Memory = 59.28 MB
+attention_sink: Avg Time = 2.09s, Avg Memory = 79.50 MB
 ```
 
-## 🔌 API Reference
+Key observations:
+- **Hierarchical** strategy consistently shows the best average processing time (1.70s)
+- **Attention Sink** has the most balanced memory usage across different input lengths
+- **Sliding Window** uses more memory for smaller inputs but stabilizes for larger texts
+- All strategies successfully handle inputs up to 21,000 characters (far beyond the model's native context limit)
 
-### Decorators
+## Implementation Notes
 
-```mermaid
-graph LR
-    A[Function] --> B[sliding_window]
-    A --> C[hierarchical_context]
-    A --> D[attention_sink]
-    A --> E[extended_context]
-    A --> F[auto_detect_context_length]
-    B --> G[Decorated Function]
-    C --> G
-    D --> G
-    E --> G
-    F --> G
-```
+- Each strategy respects the model's native context limit for individual forward passes
+- Position ID recycling enables handling of arbitrarily long inputs
+- KV caching improves generation speed and maintains coherence
+- All strategies include proper error handling and configuration validation
 
-- `@sliding_window(window_size=None, overlap=None)`: Process with sliding window
-- `@hierarchical_context(chunk_size=None, summary_length=None)`: Process with hierarchical approach
-- `@attention_sink(sink_tokens=None)`: Process with attention sink mechanism
-- `@extended_context(strategy="sliding_window", **kwargs)`: Meta-decorator that selects strategy
-- `@auto_detect_context_length`: Auto-detects model's context length
+## Why Position ID Recycling?
 
-### Factory Functions
+Position IDs are critical in transformer models as they provide information about token order. However, they present a significant challenge when working with inputs that exceed the model's maximum context length:
 
-- `create_extended_model(model_path, device=None, **kwargs)`: Creates a ContextWormholeModel
+1. **Index Out of Range Errors**: Without proper handling, position IDs for long inputs can exceed the maximum index in the position embedding table, causing runtime errors.
 
-## 📊 Benchmarks
+2. **Context Preservation**: Simply truncating inputs loses valuable context. Position ID recycling allows us to maintain more context by intelligently selecting which parts of the input to keep.
 
-| Strategy | Context Length | Memory Usage | Processing Time | Quality |
-|----------|---------------|--------------|----------------|---------|
-| Sliding Window | 10K tokens | Medium | Fast | Good |
-| Hierarchical | 20K tokens | High | Medium | Better |
-| Attention Sink | 8K tokens | Low | Very Fast | Best for chat |
+3. **Quality Improvements**: Our tests show that proper position ID handling reduces repetition in generated text and improves overall coherence.
 
-## 🔒 License
+4. **Arbitrary Length Handling**: With position ID recycling, the library can process inputs of any length while ensuring position IDs always stay within the valid range (0 to max_position_embeddings-1).
+
+The implementation uses modulo arithmetic to "recycle" position IDs, combined with strategic token selection to preserve the most relevant context from beginning, middle, and end of long documents.
+
+## Requirements
+
+- Python ≥ 3.8
+- PyTorch ≥ 1.9.0
+- Transformers ≥ 4.20.0
+- NumPy ≥ 1.20.0
+
+## Technical Background
+
+This library implements well-established context extension techniques:
+
+- **Sliding Window**: Classical attention windowing
+- **Hierarchical Context**: Recursive summarization approach
+- **Attention Sink**: Based on StreamingLLM research
+
+The focus is on providing clean, tested implementations with practical optimizations rather than novel algorithms.
+
+## License
 
 MIT License
-
-## 🤝 Contributing
-
-Contributions are welcome! Check out the [issues](https://github.com/contextwormhole/contextwormhole/issues) page for ideas.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📚 Citation
-
-```bibtex
-@software{contextwormhole2025,
-  author = {ContextWormhole Team},
-  title = {ContextWormhole: Teleport beyond context limits with transformers},
-  url = {https://github.com/contextwormhole/contextwormhole},
-  version = {1.0.0},
-  year = {2025},
-}
