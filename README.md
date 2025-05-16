@@ -255,9 +255,6 @@ graph LR
         AS_U[Attention Sink] --- AS_UC[Conversations]
     end
     
-    style SW_C fill:#d580ff,stroke:#eee,stroke-width:1px
-    style HC_C fill:#80b3ff,stroke:#eee,stroke-width:1px
-    style AS_C fill:#80ff9e,stroke:#eee,stroke-width:1px
     
     classDef default fill:#333,stroke:#eee,color:#fff,stroke-width:1px
 ```
