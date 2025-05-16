@@ -14,6 +14,38 @@ Most transformer models have fixed context windows (e.g., 1024 tokens for GPT-2)
 
 ## Strategies
 
+### Architecture Overview
+
+```mermaid
+graph TD
+    Input[Long Input Text] --> CW[ContextWormhole]
+    CW --> SW[Sliding Window]
+    CW --> HC[Hierarchical Context]
+    CW --> AS[Attention Sink]
+    
+    %% Sliding Window Strategy
+    SW --> SW1[Split into overlapping chunks]
+    SW1 --> SW2[Process each chunk]
+    SW2 --> SW3[Combine results]
+    SW3 --> SWOut[Output]
+    
+    %% Hierarchical Context Strategy
+    HC --> HC1[Split into chunks]
+    HC1 --> HC2[Generate summaries]
+    HC2 --> HC3[Combine summaries with final chunk]
+    HC3 --> HCOut[Output]
+    
+    %% Attention Sink Strategy
+    AS --> AS1[Keep initial tokens]
+    AS1 --> AS2[Discard middle content]
+    AS2 --> AS3[Keep recent context]
+    AS3 --> ASOut[Output]
+    
+    style SW fill:#f9f,stroke:#333,stroke-width:2px
+    style HC fill:#bbf,stroke:#333,stroke-width:2px
+    style AS fill:#bfb,stroke:#333,stroke-width:2px
+```
+
 ### 1. Sliding Window
 
 Processes text in overlapping chunks, maintaining continuity between segments.
@@ -209,6 +241,46 @@ detailed_response = detailed_model.attention_sink_generate(
 These examples demonstrate how ContextWormhole automatically handles context length limitations using innovative techniques like position ID recycling, sliding windows, hierarchical processing, and attention sink mechanisms.
 
 ## Performance Characteristics
+
+```mermaid
+graph LR
+    subgraph "Max Context Length"
+        SW_C[Sliding Window] --- SW_CL[~10K tokens]
+        HC_C[Hierarchical] --- HC_CL[~20K tokens]
+        AS_C[Attention Sink] --- AS_CL[~8K tokens]
+    end
+    
+    subgraph "Memory Usage"
+        SW_M[Sliding Window] --- SW_MU[600 MB]
+        HC_M[Hierarchical] --- HC_MU[400 MB]
+        AS_M[Attention Sink] --- AS_MU[300 MB]
+    end
+    
+    subgraph "Processing Time"
+        SW_T[Sliding Window] --- SW_PT[1.5-2.0s]
+        HC_T[Hierarchical] --- HC_PT[1.0-1.5s]
+        AS_T[Attention Sink] --- AS_PT[0.8-1.2s]
+    end
+    
+    subgraph "Best Use Cases"
+        SW_U[Sliding Window] --- SW_UC[Documents, code]
+        HC_U[Hierarchical] --- HC_UC[Papers, reports]
+        AS_U[Attention Sink] --- AS_UC[Conversations]
+    end
+    
+    style SW_C fill:#f9f,stroke:#333,stroke-width:1px
+    style HC_C fill:#bbf,stroke:#333,stroke-width:1px
+    style AS_C fill:#bfb,stroke:#333,stroke-width:1px
+    style SW_M fill:#f9f,stroke:#333,stroke-width:1px
+    style HC_M fill:#bbf,stroke:#333,stroke-width:1px
+    style AS_M fill:#bfb,stroke:#333,stroke-width:1px
+    style SW_T fill:#f9f,stroke:#333,stroke-width:1px
+    style HC_T fill:#bbf,stroke:#333,stroke-width:1px
+    style AS_T fill:#bfb,stroke:#333,stroke-width:1px
+    style SW_U fill:#f9f,stroke:#333,stroke-width:1px
+    style HC_U fill:#bbf,stroke:#333,stroke-width:1px
+    style AS_U fill:#bfb,stroke:#333,stroke-width:1px
+```
 
 | Strategy | Max Context | Memory (MB)* | Time (s)* | Best For |
 |----------|-------------|--------------|-----------|----------|
