@@ -255,8 +255,11 @@ graph LR
         AS_U[Attention Sink] --- AS_UC[Conversations]
     end
     
+    style SW_U fill:#9370DB,stroke:#aaa,stroke-width:1px
+    style HC_U fill:#6495ED,stroke:#aaa,stroke-width:1px
+    style AS_U fill:#66CDAA,stroke:#aaa,stroke-width:1px
     
-    classDef default fill:#333,stroke:#eee,color:#fff,stroke-width:1px
+    classDef default fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
 ```
 
 | Strategy | Max Context | Memory (MB)* | Time (s)* | Best For |
