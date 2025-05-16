@@ -42,11 +42,11 @@ graph TD
     AS2 --> AS3[Keep recent context]
     AS3 --> ASOut[Output]
     
-    style SW fill:#d580ff,stroke:#eee,stroke-width:2px
-    style HC fill:#80b3ff,stroke:#eee,stroke-width:2px
-    style AS fill:#80ff9e,stroke:#eee,stroke-width:2px
+    style SW fill:#9370DB,stroke:#aaa,stroke-width:2px
+    style HC fill:#6495ED,stroke:#aaa,stroke-width:2px
+    style AS fill:#66CDAA,stroke:#aaa,stroke-width:2px
     
-    classDef default fill:#333,stroke:#eee,color:#fff,stroke-width:1px
+    classDef default fill:#2A2A2A,stroke:#aaa,color:#ddd,stroke-width:1px
 ```
 
 ### 1. Sliding Window
@@ -248,23 +248,6 @@ These examples demonstrate how ContextWormhole automatically handles context len
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 graph LR
-    subgraph "Max Context Length"
-        SW_C[Sliding Window] --- SW_CL[~10K tokens]
-        HC_C[Hierarchical] --- HC_CL[~20K tokens]
-        AS_C[Attention Sink] --- AS_CL[~8K tokens]
-    end
-    
-    subgraph "Memory Usage"
-        SW_M[Sliding Window] --- SW_MU[600 MB]
-        HC_M[Hierarchical] --- HC_MU[400 MB]
-        AS_M[Attention Sink] --- AS_MU[300 MB]
-    end
-    
-    subgraph "Processing Time"
-        SW_T[Sliding Window] --- SW_PT[1.5-2.0s]
-        HC_T[Hierarchical] --- HC_PT[1.0-1.5s]
-        AS_T[Attention Sink] --- AS_PT[0.8-1.2s]
-    end
     
     subgraph "Best Use Cases"
         SW_U[Sliding Window] --- SW_UC[Documents, code]
