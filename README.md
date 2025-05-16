@@ -1,8 +1,11 @@
-# ContextWormhole
+# 🚀 ContextWormhole
 
 **Context length extension library for transformers**
 
 ContextWormhole provides practical implementations of three established context extension techniques. When your transformer model reaches its context limit, this library offers clean, tested strategies to handle longer inputs.
+
+![image](https://github.com/user-attachments/assets/0be3c813-d6e5-4ead-b48b-fe48b37e91e7)
+
 
 ```bash
 pip install contextwormhole
