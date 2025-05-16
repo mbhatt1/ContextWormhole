@@ -258,15 +258,6 @@ graph LR
     style SW_C fill:#d580ff,stroke:#eee,stroke-width:1px
     style HC_C fill:#80b3ff,stroke:#eee,stroke-width:1px
     style AS_C fill:#80ff9e,stroke:#eee,stroke-width:1px
-    style SW_M fill:#d580ff,stroke:#eee,stroke-width:1px
-    style HC_M fill:#80b3ff,stroke:#eee,stroke-width:1px
-    style AS_M fill:#80ff9e,stroke:#eee,stroke-width:1px
-    style SW_T fill:#d580ff,stroke:#eee,stroke-width:1px
-    style HC_T fill:#80b3ff,stroke:#eee,stroke-width:1px
-    style AS_T fill:#80ff9e,stroke:#eee,stroke-width:1px
-    style SW_U fill:#d580ff,stroke:#eee,stroke-width:1px
-    style HC_U fill:#80b3ff,stroke:#eee,stroke-width:1px
-    style AS_U fill:#80ff9e,stroke:#eee,stroke-width:1px
     
     classDef default fill:#333,stroke:#eee,color:#fff,stroke-width:1px
 ```
